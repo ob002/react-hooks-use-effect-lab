@@ -1,32 +1,45 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 function Question({ question, onAnswered }) {
   const [timeRemaining, setTimeRemaining] = useState(10);
 
-  // add useEffect code
+  useEffect(() => {
+    // If time hits zero: reset timer and trigger onAnswered(false)
+    if (timeRemaining === 0) {
+      setTimeRemaining(10);
+      onAnswered(false);
+      return; // Exit early so no new timer starts this cycle
+    }
 
-  function handleAnswer(isCorrect) {
-    setTimeRemaining(10);
-    onAnswered(isCorrect);
-  }
+    // Create a timer to decrement every second
+    const timer = setTimeout(() => {
+      setTimeRemaining((prevTime) => prevTime - 1);
+    }, 1000);
 
-  const { id, prompt, answers, correctIndex } = question;
+    // Cleanup to clear the timeout before next render or unmount
+    return () => clearTimeout(timer);
+  }, [timeRemaining, onAnswered]);
 
   return (
-    <>
-      <h1>Question {id}</h1>
-      <h3>{prompt}</h3>
-      {answers.map((answer, index) => {
-        const isCorrect = index === correctIndex;
-        return (
-          <button key={answer} onClick={() => handleAnswer(isCorrect)}>
+    <div className="question">
+      <h2>{question.prompt}</h2>
+      <div className="answers">
+        {question.answers.map((answer) => (
+          <button
+            key={answer}
+            onClick={() => {
+              onAnswered(answer === question.correctAnswer);
+              setTimeRemaining(10); // reset timer for next question
+            }}
+          >
             {answer}
           </button>
-        );
-      })}
+        ))}
+      </div>
       <h5>{timeRemaining} seconds remaining</h5>
-    </>
+    </div>
   );
 }
 
 export default Question;
+
